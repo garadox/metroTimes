@@ -5,7 +5,7 @@ import metrotransit.BusService
 
 
 //Script to return the time until the next bus, given a route, stop and direction
-def cli = new CliBuilder(usage:'getTimes.groovy <route> <stop> <direction>')
+def cli = new CliBuilder(usage:'busTimes.groovy <route> <stop> <direction>')
 options = cli.parse(args)
 
 if (options.arguments().isEmpty() || options.arguments().size() != 3) {
