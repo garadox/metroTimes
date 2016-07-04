@@ -6,6 +6,21 @@ import org.joda.time.*
 
 class BusService {
 
+    def findBusTimes(String busRoute ,String busStop, String routeDirection) {
+        String routeId = getRouteId(busRoute)
+        if (!routeId) {
+            throw new InvalidRouteException(busRoute)
+        }
+    }
+
+    protected String getRouteId(String busRoute) {
+        def rawResponse = "http://svc.metrotransit.org/NexTrip/Routes".toURL().
+                getText(requestProperties: [Accept: 'application/json'])
+        def json = new JsonSlurper().parseText(rawResponse)
+        def routeData = json.find { entry -> entry.Description.toUpperCase().contains(busRoute.toUpperCase()) }
+        routeData?.Route
+    }
+
     static String findRouteId(String busRoute) {
         def rawResponse = "http://svc.metrotransit.org/NexTrip/Routes".toURL().
                 getText(requestProperties: [Accept: 'application/json'])
