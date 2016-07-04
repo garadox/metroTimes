@@ -6,27 +6,25 @@ import org.joda.time.*
 
 class BusService {
 
+    BusApi busApi
+
+    BusService(BusApi busApi) {
+        this.busApi = busApi
+    }
+
     def findBusTimes(String busRoute ,String busStop, String routeDirection) {
-        String routeId = getRouteId(busRoute)
+        String routeId = findRouteId(busRoute)
         if (!routeId) {
             throw new InvalidRouteException(busRoute)
         }
+
+        
     }
 
-    protected String getRouteId(String busRoute) {
-        def rawResponse = "http://svc.metrotransit.org/NexTrip/Routes".toURL().
-                getText(requestProperties: [Accept: 'application/json'])
-        def json = new JsonSlurper().parseText(rawResponse)
-        def routeData = json.find { entry -> entry.Description.toUpperCase().contains(busRoute.toUpperCase()) }
-        routeData?.Route
-    }
-
-    static String findRouteId(String busRoute) {
-        def rawResponse = "http://svc.metrotransit.org/NexTrip/Routes".toURL().
-                getText(requestProperties: [Accept: 'application/json'])
-        def json = new JsonSlurper().parseText(rawResponse)
-        def routeData = json.find { entry -> entry.Description.toUpperCase().contains(busRoute.toUpperCase()) }
-        routeData?.Route
+    String findRouteId(String busRoute) {
+        def routes = busApi.routeIds
+        def route = routes.find { entry -> entry.name.toUpperCase() == busRoute.toUpperCase() }
+        route?.id
     }
 
     static String findRouteDirectionIdByRouteId(String routeId, String routeDirection) {
