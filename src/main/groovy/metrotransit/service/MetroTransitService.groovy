@@ -1,14 +1,18 @@
-package metrotransit
+package metrotransit.service
 
 
 import groovy.json.JsonSlurper
+import metrotransit.exception.InvalidRouteBusStopException
+import metrotransit.exception.InvalidRouteDirectionException
+import metrotransit.exception.InvalidRouteException
+import metrotransit.integration.MetroTransit
 import org.joda.time.*
 
-class BusService {
+class MetroTransitService {
 
-    BusApi busApi
+    MetroTransit busApi
 
-    BusService(BusApi busApi) {
+    MetroTransitService(MetroTransit busApi) {
         this.busApi = busApi
     }
 
@@ -18,21 +22,33 @@ class BusService {
             throw new InvalidRouteException(busRoute)
         }
 
-        
+        String routeDirectionId = findRouteDirectionId(routeId, routeDirection)
+        if (!routeDirectionId) {
+            throw new InvalidRouteDirectionException(routeDirection)
+        }
+
+        String busStopId = findRouteBusStop(routeId, routeDirectionId, busStop)
+        if (!busStopId) {
+            throw new InvalidRouteBusStopException(busStop)
+        }
     }
 
     String findRouteId(String busRoute) {
         def routes = busApi.routeIds
-        def route = routes.find { entry -> entry.name.toUpperCase() == busRoute.toUpperCase() }
+        def route = routes.find { entry -> entry.name.toUpperCase().contains(busRoute.toUpperCase()) }
         route?.id
     }
 
-    static String findRouteDirectionIdByRouteId(String routeId, String routeDirection) {
-        def rawResponse = "http://svc.metrotransit.org/NexTrip/Directions/${routeId}".toURL().
-                getText(requestProperties: [Accept: 'application/json'])
-        def json = new JsonSlurper().parseText(rawResponse)
-        def directionId = json.find { entry -> entry.Text.contains(routeDirection.toUpperCase()) }
-        directionId?.Value
+    String findRouteDirectionId(String routeId, String routeDirection) {
+        def directions = busApi.getRouteDirections(routeId)
+        def direction = directions.find { entry -> entry.name.toUpperCase().contains(routeDirection.toUpperCase()) }
+        direction?.id
+    }
+
+    String findRouteBusStop(String routeId, String routeDirectionId, String routeBusStop) {
+        def busStops = busApi.getRouteBusStops(routeId, routeDirectionId)
+        def busStop = busStops.find { entry -> entry.name.toUpperCase().contains(routeBusStop.toUpperCase()) }
+        busStop?.id
     }
 
     static String findStopIdByRouteIdAndDirectionId(String routeId, String directionId, String busStop) {
