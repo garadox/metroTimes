@@ -31,32 +31,32 @@ class MetroTransitService {
         if (!busStopId) {
             throw new InvalidRouteBusStopException(busStop)
         }
+
+        def busTimes = fetchBusTimes(routeId, routeDirection, busStopId)
+        busTimes
     }
 
-    String findRouteId(String busRoute) {
+    protected String findRouteId(String busRoute) {
         def routes = busApi.routeIds
         def route = routes.find { entry -> entry.name.toUpperCase().contains(busRoute.toUpperCase()) }
         route?.id
     }
 
-    String findRouteDirectionId(String routeId, String routeDirection) {
+    protected String findRouteDirectionId(String routeId, String routeDirection) {
         def directions = busApi.getRouteDirections(routeId)
         def direction = directions.find { entry -> entry.name.toUpperCase().contains(routeDirection.toUpperCase()) }
         direction?.id
     }
 
-    String findRouteBusStop(String routeId, String routeDirectionId, String routeBusStop) {
+    protected String findRouteBusStop(String routeId, String routeDirectionId, String routeBusStop) {
         def busStops = busApi.getRouteBusStops(routeId, routeDirectionId)
         def busStop = busStops.find { entry -> entry.name.toUpperCase().contains(routeBusStop.toUpperCase()) }
         busStop?.id
     }
 
-    static String findStopIdByRouteIdAndDirectionId(String routeId, String directionId, String busStop) {
-        def rawResponse = "http://svc.metrotransit.org/NexTrip/Stops/${routeId}/${directionId}".toURL().
-                getText(requestProperties: [Accept: 'application/json'])
-        def json = new JsonSlurper().parseText(rawResponse)
-        def stopData = json.find { entry -> entry.Text.toUpperCase().contains(busStop.toUpperCase()) }
-        stopData?.Value
+    protected fetchBusTimes(String routeId, String routeDirectionId, String routeBusStopId) {
+        def busTimes = busApi.getBusTimes(routeId, routeDirectionId, routeBusStopId)
+        busTimes.sort { a, b -> a <=> b }
     }
 
     static def findBusTimesByRouteIdAndDirectionIdAndStopId(String routeId, String directionId, String stopId) {

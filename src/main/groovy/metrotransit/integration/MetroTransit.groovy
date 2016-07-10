@@ -19,6 +19,13 @@ class MetroTransit {
     }
 
     def getRouteBusStops(String routeId, String directionId) {
+        def rawResponse = "http://svc.metrotransit.org/NexTrip/Stops/${routeId}/${directionId}".toURL().
+                getText(requestProperties: [Accept: 'application/json'])
+        def json = new JsonSlurper().parseText(rawResponse)
+        json.collect { entry -> [id: entry.Value, name: entry.Text] }
+    }
+
+    def getBusTimes(String routeId, String directionId, String routeBusStopId) {
 
     }
 }
